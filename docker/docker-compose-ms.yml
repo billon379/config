@@ -1,0 +1,162 @@
+#docker-compose版本
+version: '3'
+
+#定义所有服务
+services:
+
+  #zipkin服务
+  zipkin:
+    image: registry.cn-beijing.aliyuncs.com/billon379/zipkin:2
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev
+      - RABBIT_ADDRESSES=10.1.65.33:5672
+      - RABBIT_USER=billon
+      - RABBIT_PASSWORD=billon
+      - STORAGE_TYPE=elasticsearch
+      - ES_HOSTS=10.1.65.33:9200
+      - ES_INDEX_SHARDS=1
+      - ES_INDEX_REPLICAS=1
+    ports:
+      - '7999:9411'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  #eureka服务
+  eureka:
+    image: registry.cn-beijing.aliyuncs.com/billon379/eureka:1.0.0
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+    ports:
+      - '8000:8000'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  #auth服务
+  auth:
+    image: registry.cn-beijing.aliyuncs.com/billon379/auth-rest:1.0.0
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - '8001:8001'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  #member服务
+  member:
+    image: registry.cn-beijing.aliyuncs.com/billon379/member-rest:1.0.0
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - '8002:8002'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  #forum服务
+  forum:
+    image: registry.cn-beijing.aliyuncs.com/billon379/forum-rest:1.0.0
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - '8003:8003'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  #im服务
+  im:
+    image: registry.cn-beijing.aliyuncs.com/billon379/im-rest:1.0.0
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - '8005:8005'
+      - '18005:18005'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  #app-web服务
+  app-web:
+    image: registry.cn-beijing.aliyuncs.com/billon379/app-web:1.0.0
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - '8080:8080'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+  #master-web服务
+  master-web:
+    image: registry.cn-beijing.aliyuncs.com/billon379/master-web:1.0.0
+    environment:
+      - JAVA_OPTS=-Xmx256m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - '8081:8081'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+
+#使用外部定义网络,同一个网络内的容器可以通过服务名访问
+networks:
+  billon:
+    external:
+      name: billon

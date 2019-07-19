@@ -1,0 +1,127 @@
+#docker-compose版本
+version: '3'
+
+#定义所有服务
+services:
+
+  #nginx服务
+  nginx:
+    image: registry.cn-beijing.aliyuncs.com/billon379/nginx-alpine:1.15.5
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - d:/docker_volumes/nginx/conf.d/:/etc/nginx/conf.d/:ro
+      - d:/docker_volumes/nginx/static:/usr/local/projects/static:ro
+      - d:/docker_volumes/nginx/ssl:/etc/ssl/private:ro
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 128M
+
+  #redis服务
+  redis:
+    image: registry.cn-beijing.aliyuncs.com/billon379/redis-alpine:4.0.11
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '6379:6379'
+    volumes:
+      - d:/docker_volumes/redis/redis.conf:/etc/redis.conf:ro
+      - d:/docker_volumes/redis/data:/data
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1G
+
+  #mysql服务
+  mysql:
+    image: registry.cn-beijing.aliyuncs.com/billon379/mysql-debian:5.7
+    environment:
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - '3306:3306'
+    volumes:
+      - d:/docker_volumes/mysql/conf.d:/etc/mysql/conf.d
+      - d:/docker_volumes/mysql/data:/var/lib/mysql
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1G
+
+  #rabbitmq服务
+  rabbitmq:
+    image: registry.cn-beijing.aliyuncs.com/billon379/rabbitmq-alpine:3.7.8
+    environment:
+      - RABBITMQ_DEFAULT_USER=billon
+      - RABBITMQ_DEFAULT_PASS=billon
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - d:/docker_volumes/rabbitmq/data:/var/lib/rabbitmq/mnesia
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1G
+
+  #elasticsearch服务
+  elasticsearch:
+    image: registry.cn-beijing.aliyuncs.com/billon379/elasticsearch-centos:6.4.3
+    environment:
+      - discovery.type=single-node
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - d:/docker_volumes/elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 2G
+
+  #kibana服务
+  kibana:
+    image: registry.cn-beijing.aliyuncs.com/billon379/kibana-centos:6.4.3
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - '5601:5601'
+    networks:
+      - billon
+    deploy:
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1G
+
+#使用外部定义网络,同一个网络内的容器可以通过服务名访问
+networks:
+  billon:
+    external:
+      name: billon
